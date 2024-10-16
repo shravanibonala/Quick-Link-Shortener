@@ -1,0 +1,83 @@
+import java.io.*;
+import java.util.*;
+public class LinkShortener {
+    private static final String STORAGE_FILE = "url_mappings.txt";
+    private static Map<String, String> urlMappings = new HashMap<>();
+    public static void main(String[] args) {
+        loadUrlMappings();
+        Scanner scanner = new Scanner(System.in);
+        while (true) {
+            System.out.println("QuickLink Shortener");
+            System.out.println("1. Shorten URL");
+            System.out.println("2. Redirect URL");
+            System.out.println("3. Exit");
+            System.out.print("Choose an option: ");
+            int option = scanner.nextInt();
+
+            switch (option) {
+                case 1:
+                    shortenUrl(scanner);
+                    break;
+                case 2:
+                    redirectUrl(scanner);
+                    break;
+                case 3:
+                    System.out.println("Exiting...");
+                    return;
+                default:
+                    System.out.println("Invalid option. Please choose a valid option.");
+            }
+        }
+    }
+    private static void loadUrlMappings() {
+        try (BufferedReader reader = new BufferedReader(new FileReader(STORAGE_FILE))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",");
+                urlMappings.put(parts[0], parts[1]);
+            }
+        } catch (IOException e) {
+            System.out.println("Error loading URL mappings: " + e.getMessage());
+        }
+    }
+    private static void shortenUrl(Scanner scanner) {
+        System.out.print("Enter a long URL: ");
+        String longUrl = scanner.next();
+        if (urlMappings.containsValue(longUrl)) {
+            System.out.println("URL already shortened. Use the redirect option to retrieve the original URL.");
+            return;
+        }
+        String shortUrl = generateShortUrl();
+        urlMappings.put(shortUrl, longUrl);
+        saveUrlMappings();
+        System.out.println("Shortened URL: " + shortUrl);
+    }
+    private static void redirectUrl(Scanner scanner) {
+        System.out.print("Enter a shortened URL: ");
+        String shortUrl = scanner.next();
+        if (!urlMappings.containsKey(shortUrl)) {
+            System.out.println("URL not found.");
+            return;
+        }
+        String longUrl = urlMappings.get(shortUrl);
+        System.out.println("Original URL: " + longUrl);
+    }
+    private static String generateShortUrl() {
+        // Simple implementation: generate a random 6-character alphanumeric string
+        String chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+        StringBuilder shortUrl = new StringBuilder();
+        for (int i = 0; i < 6; i++) {
+            shortUrl.append(chars.charAt((int) (Math.random() * chars.length())));
+        }
+        return shortUrl.toString();
+    }
+    private static void saveUrlMappings() {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(STORAGE_FILE))) {
+            for (Map.Entry<String, String> entry : urlMappings.entrySet()) {
+                writer.write(entry.getKey() + "," + entry.getValue() + "\n");
+            }
+        } catch (IOException e) {
+            System.out.println("Error saving URL mappings: " + e.getMessage());
+        }
+    }
+}
